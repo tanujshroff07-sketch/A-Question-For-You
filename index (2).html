@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A question for you</title>
+<style>
+:root{--bg1:#fff1f3;--bg2:#ffd6df;--ink:#4a1d2b;--soft:#8a4a5d;--card:rgba(255,255,255,.72);--yes:#e11d48;--yes2:#fb7185;--no:#fff;--noink:#6b7280;--line:#f3b8c5;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#2a0f19;--bg2:#4a1a2b;--ink:#ffe4ea;--soft:#f2a9ba;--card:rgba(255,255,255,.08);--no:#3b2430;--noink:#d1b5bf;--line:#6b2d41;color-scheme:dark}}
+:root[data-theme="dark"]{--bg1:#2a0f19;--bg2:#4a1a2b;--ink:#ffe4ea;--soft:#f2a9ba;--card:rgba(255,255,255,.08);--no:#3b2430;--noink:#d1b5bf;--line:#6b2d41;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.card{position:relative;z-index:2;width:min(92vw,520px);padding:34px 26px 30px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:28px;backdrop-filter:blur(8px);box-shadow:0 20px 60px rgba(225,29,72,.18)}
+.emoji{font-size:64px;line-height:1;display:inline-block;animation:beat 1.4s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+h1{font-size:clamp(26px,6vw,36px);margin:14px 0 8px;line-height:1.2}
+p{margin:0 0 22px;color:var(--soft);font-size:17px;min-height:26px}
+.row{display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:14px 30px;font-size:19px;touch-action:manipulation}
+#yes{background:linear-gradient(135deg,var(--yes),var(--yes2));color:#fff;font-weight:700;box-shadow:0 8px 24px rgba(225,29,72,.4)}
+#yes:active{transform:scale(.97)}
+#no{background:var(--no);color:var(--noink);border:1px solid var(--line);transition:transform .3s ease,opacity .3s ease}
+.reply{margin:18px auto 0;min-height:56px;max-width:360px;padding:12px 16px;border-radius:18px;background:var(--no);border:1px dashed var(--line);color:var(--ink);font-size:16px;line-height:1.35;opacity:0;transform:translateY(6px);transition:opacity .25s ease,transform .25s ease}
+.reply.show{opacity:1;transform:none}
+.shake{animation:shake .45s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px) rotate(-2deg)}40%{transform:translateX(9px) rotate(2deg)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.counter{margin-top:14px;font-size:13px;color:var(--soft);opacity:.85;min-height:18px}
+#win{display:none}
+#winmsg{white-space:pre-line}
+.big{font-size:clamp(30px,8vw,46px)}
+.barwrap{height:12px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 6px 0}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--yes),var(--yes2));transition:width .15s linear}
+.heart{position:fixed;top:-40px;z-index:1;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(360deg);opacity:.9}}
+@media (prefers-reduced-motion:reduce){.emoji,.shake{animation:none}}
+</style>
+</head>
+<body>
+<div class="card" id="loader">
+  <div class="emoji">💌</div>
+  <h1>Loading something important…</h1>
+  <p id="lmsg">Please don’t close this page</p>
+  <div class="barwrap"><div class="bar" id="bar"></div></div>
+  <div class="counter" id="pct">0%</div>
+</div>
+
+<div class="card" id="ask" style="display:none">
+  <div class="emoji">💘</div>
+  <h1 id="title"></h1>
+  <p id="sub">I’ve been wanting to ask you something…</p>
+  <div class="row">
+    <button id="yes">Yes 💖</button>
+    <button id="no">No</button>
+  </div>
+  <div class="reply" id="reply"></div>
+  <div class="counter" id="counter"></div>
+</div>
+
+<div class="card" id="win">
+  <div class="emoji">🥹</div>
+  <h1 class="big">She said YES!</h1>
+  <p id="winmsg">The plan was never to fall in love unless its u
+loveeeee u</p>
+</div>
+
+<script>
+// ✏️ EDIT THESE
+var HER_NAME = "Pratitu";
+var QUESTION = "Can I be ur boyfriend?";
+var WIN_MESSAGE = "The plan was never to fall in love unless its u\nloveeeee u";
+
+// What happens when she taps "No" (played in order, then repeats from the 5th onward)
+var REPLIES = [
+  "Hmm, this button doesn’t seem to be working 🤔",
+  "Error 404: “No” not found ❌",
+  "Request denied. Please try “Yes” instead 💖",
+  "Your “No” has been forwarded to the Department of Nope 📨",
+  "“No” is on a coffee break ☕ Back never.",
+  "Plot twist: this button is just for decoration 😌",
+  "Loading “No”… failed. Loading “Yes”… ready ✅",
+  "I can see you smiling right now 😏",
+  "The server only accepts “Yes” 💻",
+  "Fun fact: “No” has never once worked here 📚",
+  "Even my phone is rooting for me 📱",
+  "Okay, last warning: only “Yes” works 😂",
+  "You’re trying so hard. It’s adorable 🥰",
+  "Tap the pink one, Pratitu 👉💖"
+];
+var NO_LABELS = ["No","Nope","Still no?","Really?","No 🥲","Please?","No…"];
+
+var $ = function(id){return document.getElementById(id)};
+var yes=$("yes"), no=$("no"), reply=$("reply"), counter=$("counter"), card=$("ask");
+var tries=0, hideT=null;
+
+$("title").textContent = (HER_NAME && HER_NAME!=="Name") ? HER_NAME + ", " + QUESTION.charAt(0).toLowerCase() + QUESTION.slice(1) : QUESTION;
+$("winmsg").textContent = WIN_MESSAGE;
+
+no.addEventListener("click", function(){
+  tries++;
+  var msg = tries<=REPLIES.length ? REPLIES[tries-1] : REPLIES[4 + Math.floor(Math.random()*(REPLIES.length-4))];
+  reply.textContent = msg;
+  reply.classList.add("show");
+  card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+  try{ if(navigator.vibrate) navigator.vibrate(60) }catch(e){}
+  no.textContent = NO_LABELS[Math.min(tries, NO_LABELS.length-1)];
+  var s = Math.max(1 - tries*0.04, 0.72);
+  no.style.transform = "scale("+s+")";
+  no.style.opacity = Math.max(1 - tries*0.05, 0.6);
+  counter.textContent = "Attempts to say no: " + tries + " · Successful: 0";
+});
+
+// Fake loading screen
+var pct=0;
+var lt=setInterval(function(){
+  pct += pct<90 ? 3+Math.random()*5 : 0.6;
+  if(pct>=99){
+    pct=99; clearInterval(lt);
+    $("lmsg").textContent="Almost there… for real this time";
+    setTimeout(function(){$("loader").style.display="none";$("ask").style.display="block"},1400);
+  }
+  $("bar").style.width=pct+"%";
+  $("pct").textContent=Math.floor(pct)+"%";
+},120);
+
+// Celebration
+function hearts(n){
+  var set=["💖","💕","💘","🌹","✨","💗","🥰"];
+  for(var i=0;i<n;i++){
+    var h=document.createElement("div");
+    h.className="heart";
+    h.textContent=set[Math.floor(Math.random()*set.length)];
+    h.style.left=Math.random()*100+"vw";
+    h.style.fontSize=(16+Math.random()*30)+"px";
+    h.style.animationDuration=(3+Math.random()*4)+"s";
+    h.style.animationDelay=(Math.random()*1.5)+"s";
+    document.body.appendChild(h);
+    setTimeout(function(el){el.remove()}, 9000, h);
+  }
+}
+yes.addEventListener("click", function(){
+  $("ask").style.display="none";
+  $("win").style.display="block";
+  hearts(70);
+  setInterval(function(){hearts(14)}, 2500);
+});
+// gentle ambient hearts on the question screen
+setInterval(function(){ if($("ask").style.display!=="none" && $("win").style.display!=="block") hearts(2) }, 1800);
+</script>
+</body>
+</html>
